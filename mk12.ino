@@ -1,16 +1,15 @@
 // mk12.ino - Arduino Mega 2650 + 12 potentiometers + MIDI port
 
 const int KNOBS = 12;    // analog inputs on A0-A11
-const int READS = 1;     // number of reads to average
 const float ALPHA = 0.1; // alpha value to determine when knob_data[i] changes
 
-float knob_data[KNOBS];   // running average of knob positions (0 to 1023)
-float knob_write[KNOBS];  // last value written to serial port
+float knobData[KNOBS];   // running average of knob positions (0 to 1023)
+float knobWrite[KNOBS];  // last value written to serial port
 
-byte status_byte = 0xB0;  // MIDI channel 1
-byte cc_start = 0x46;     // Control Change start value
-                          // 0x46 to 0x4F -> Sound Controller 1-10
-                          // 0x50 to 0x53 -> General Purpose 1-4
+byte statusByte = 0xB0;  // MIDI channel 1
+byte ccStart = 0x46;     // Control Change start value
+                         // 0x46 to 0x4F -> Sound Controller 1-10
+                         // 0x50 to 0x53 -> General Purpose 1-4
 
 void setup() {
   Serial.begin(115200);  // for Serial USB->MIDI bridge
@@ -23,18 +22,16 @@ void loop() {
 }
 
 void readKnobs() {
-  for (int i = 0; i < READS; i++) {
-    for (int j = 0; j < KNOBS; j++) {
-      knob_data[j] = ALPHA * analogRead(j) + (1-ALPHA) * knob_data[j];
-    }
+  for (int j = 0; j < KNOBS; j++) {
+    knobData[j] = ALPHA * analogRead(j) + (1-ALPHA) * knobData[j];
   }
 }
 
 void sendData() {
   for (int i = 0; i < KNOBS; i++) {
-    if (ceil(knob_data[i]/8) != ceil(knob_write[i]/8)) {  // translate 10-bit to 8-bit
-      sendMidi(status_byte, cc_start + i, (int)(knob_data[i]/8));
-      knob_write[i] = knob_data[i];
+    if (ceil(knobData[i]/8) != ceil(knobWrite[i]/8)) {  // translate 10-bit to 8-bit
+      sendMidi(statusByte, cc_start + i, (int)(knobData[i]/8));
+      knobWrite[i] = knobData[i];
     } 
   }
 }
